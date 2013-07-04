@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Package">
+
+  <!-- 
+  	****************************************
+  	* IMPORTS
+	****************************************
+  -->
+  <PropertyGroup>
+  	<MSBuildCommunityTasksPath>$(MSBuildProjectDirectory)\Packages\MSBuildCommunityTasks</MSBuildCommunityTasksPath>
+  	<MSBuildNuGetTasksPath>$(MSBuildProjectDirectory)\Packages\MSBuildNuGetTasks</MSBuildNuGetTasksPath>
+  </PropertyGroup>
+  
+  <Import Project="$(MSBuildCommunityTasksPath)\MSBuild.Community.Tasks.Targets" />
+  <Import Project="$(MSBuildNuGetTasksPath)\MSBuild.NuGet.Tasks.Targets" />
+
+  <!-- 
+  	****************************************
+  	* PROPERTIES
+	****************************************
+  -->
+  <PropertyGroup>
+	  <PackageVersion>1.0</PackageVersion>
+    <BuildConfig>Release</BuildConfig>
+  </PropertyGroup>
+
+  <PropertyGroup>
+	  <RootDir>$(MSBuildProjectDirectory)</RootDir>
+	  <BuildDir>$(RootDir)\Build</BuildDir>
+	  <PackageDir>$(RootDir)\Package</PackageDir>
+  </PropertyGroup>
+  
+  <!-- 
+  	****************************************
+  	* TARGETS
+	****************************************
+  -->
+  
+  <!-- CLEAN -->
+  <Target Name="Clean">
+	  <RemoveDir Directories="$(BuildDir)" Condition="Exists('$(BuildDir)')" />
+  	<RemoveDir Directories="$(PackageDir)" Condition="Exists('$(PackageDir)')" />
+	  <MakeDir Directories="$(BuildDir)" />
+  	<MakeDir Directories="$(PackageDir)" />
+  </Target>
+
+  <!-- UPDATE ASSEMBLEY VERSION -->
+  <Target Name="UpdateAssemblyInfo" DependsOnTargets="Clean">
+    <ItemGroup>
+      <AssemblyInfoFiles Include="$(RootDir)\Src\LaunchKey\Properties\AssemblyInfo.cs" />
+    </ItemGroup>
+    <FileUpdate
+          Encoding="ASCII"
+          Files="@(AssemblyInfoFiles)"
+          Regex="AssemblyVersion\(&quot;.*&quot;\)\]"
+          ReplacementText="AssemblyVersion(&quot;$(PackageVersion)&quot;)]" />
+    <FileUpdate
+          Encoding="ASCII"
+          Files="@(AssemblyInfoFiles)"
+          Regex="AssemblyFileVersion\(&quot;.*&quot;\)\]"
+          ReplacementText="AssemblyFileVersion(&quot;$(PackageVersion)&quot;)]" />
+  </Target>
+
+  <!-- COMPILE -->
+  <Target Name="Compile" DependsOnTargets="UpdateAssemblyInfo">
+    <ItemGroup>
+      <ProjectFiles Include="$(RootDir)\Src\LaunchKey\LaunchKey.csproj" />
+    </ItemGroup>
+    <MSBuild Projects="@(ProjectFiles)" Properties="Configuration=$(BuildConfig);" />
+  </Target>
+    
+  <!-- PREPAIRE FILES --> 
+  <Target Name="PrepairFiles" DependsOnTargets="Compile">
+	  <ItemGroup>
+		<LibFiles Include="$(RootDir)\Src\LaunchKey\Bin\$(BuildConfig)\LaunchKey.dll" />
+		<PackageFiles Include="$(RootDir)\Package.nuspec" /> 
+	  </ItemGroup>
+	  <Copy SourceFiles="@(LibFiles)" DestinationFolder="$(BuildDir)\lib\" />
+	  <Copy SourceFiles="@(PackageFiles)" DestinationFolder="$(BuildDir)\%(RecursiveDir)" />
+  </Target> 
+  
+  <!-- MANIFEST -->
+  <Target Name="Manifest" DependsOnTargets="PrepairFiles">
+	  <ItemGroup>
+      <ManifestFiles Include="$(BuildDir)\**\*" Exclude="$(BuildDir)\Package.nuspec" />
+    </ItemGroup>
+	  <ManifestUpdate 
+		  ManifestFile="$(BuildDir)\Package.nuspec"
+		  WorkingDirectory="$(BuildDir)"
+		  Version="$(PackageVersion)"
+	    Files="@(ManifestFiles)" />
+  </Target> 
+    
+  <!-- PACKAGE -->
+  <Target Name="Package" DependsOnTargets="Manifest">
+	  <Pack NuGetExePath="$(RootDir)\Packages\NuGet\NuGet.exe" 
+		  ManifestFile="$(BuildDir)\Package.nuspec" 
+		  BasePath="$(BuildDir)" 
+		  OutputDirectory="$(PackageDir)" 
+		  Verbose="true" />
+  </Target> 
+  
+</Project>

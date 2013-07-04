@@ -1,0 +1,22 @@
+﻿<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>LaunchKey.NET</id>
+    <version>0.0.0</version>
+    <title>LaunchKey.NET</title>
+    <description>A simple wrapper for accessing the LaunchKey API</description>
+    <authors>Matt Brailsford</authors>
+    <projectUrl>http://www.launchkey.com</projectUrl>
+    <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <copyright>Copyright (c) Outfield Digital Ltd 2013</copyright>
+    <summary />
+    <language />
+    <dependencies>
+      <dependency id="RestSharp" version="104.1" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\LICENSE.txt" target="LICENSE.txt" />
+  </files>
+</package>
